@@ -19,7 +19,7 @@ void print_id (int id) {
 }
 
 void go() {
-    std::unique_lock<std::mutex> lck(mtx);
+    //std::unique_lock<std::mutex> lck(mtx);
     ready = true;
     cv.notify_all();
 }

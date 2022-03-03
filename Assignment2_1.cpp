@@ -4,6 +4,7 @@
 #include <condition_variable>
 #include <time.h>
 #include <vector>
+#include <cctype>
 
 std::mutex mtx;
 std::condition_variable cv[8];
@@ -73,7 +74,7 @@ void minotaur()
         std::unique_lock<std::mutex> lck(mtx);
         while (guest_in) minotaur_cv.wait(lck);
     }
-    std::cout << "\n\nAll guests have experienced the maze." << std::endl;
+    std::cout << "\nAll guests have experienced the maze." << std::endl;
     for (int i = 0; i < 8; i++) {
         may_enter[i] = true;
         cv[i].notify_one();
@@ -89,7 +90,7 @@ int main()
     std::cin >> to_output;
     do
     {
-        if(to_output != 'y' && to_output != 'n')
+        if(tolower(to_output) != 'y' && tolower(to_output) != 'n')
         {
             std::cout << "Enter in either y or n." << std::endl;
             std::cin >> to_output;
@@ -98,23 +99,22 @@ int main()
         else 
         {
             valid = true;
-            if (to_output == 'y') output = true;
+            if (tolower(to_output) == 'y') output = true;
             else output = false;
         }
     } while (!valid);
-    
-    
+    std::cout << "Minotaur begins the party with 8 guests.\n" << std::endl;
 
-    std::vector<std::thread> threads;
+    std::vector<std::thread> guests;
     for (int i = 0; i < 8; i++)
     {
         may_enter[i] = false;
-        threads.push_back(std::thread(enterLabyrinth, i));
+        guests.push_back(std::thread(enterLabyrinth, i));
     }
 
     minotaur();
     
-    for (std::thread &th : threads) th.join();
+    for (std::thread &gu : guests) gu.join();
 
     return 0;
 }
