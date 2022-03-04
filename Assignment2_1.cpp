@@ -55,7 +55,7 @@ void enterLabyrinth(int id)
         else
         {
             // Guest has already eaten or found no cupcake.
-            if(output) std::cout << " and found no cupcake." << std::endl;
+            if(output) std::cout << " and did nothing." << std::endl;
         }
 
         // Guest leaves the labyrinth and lets the minotaur know.
