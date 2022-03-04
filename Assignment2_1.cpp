@@ -20,13 +20,14 @@ bool output;
 
 void enterLabyrinth(int id)
 {
-    bool has_eaten = false;
+    bool has_eaten = false; // Whether this guest has eaten a cupcake.
     while(!all_guests)
     {
-        std::unique_lock<std::mutex> lck(mtx);
+        std::unique_lock<std::mutex> lck(mtx); // Locking the guest until they have been notified
         while (!may_enter[id]) cv[id].wait(lck);
         if (all_guests) break;
         if(output) std::cout << "guest " << id << " has entered the labyrinth";
+        // Having the guest eat the cupcake if they haven't already.
         if (cupcake && !has_eaten && id != 0)
         {
             has_eaten = true;
@@ -37,6 +38,7 @@ void enterLabyrinth(int id)
         {
             if (!cupcake)
             {
+                // Guest 0 counts how many cupcakes have been eaten and calls a new one.
                 cupcake = true;
                 guest_counted++;
                 if(output) std::cout << ", counted " << guest_counted << " guests";
@@ -46,35 +48,39 @@ void enterLabyrinth(int id)
             }
             else
             {
+                // Guest 0 does nothing in this instance
                 if(output) std::cout << ", but no one else has entered since the last entry." << std::endl;
             }
         }
         else
         {
+            // Guest has already eaten or found no cupcake.
             if(output) std::cout << " and found no cupcake." << std::endl;
         }
 
+        // Guest leaves the labyrinth and lets the minotaur know.
         may_enter[id] = false;
         guest_in = false;
         minotaur_cv.notify_one();
         if(output) std::cout << "guest " << id << " has left the labyrinth" << std::endl;
     }
-    //std::cout << "Thread " << id << " has finished" << std::endl;
 }
 
 void minotaur()
 {
     while(!all_guests)
     {
+        // Since the guests have not let the minotaur know they have all entered, he will keep calling in a random guest
         current_guest = rand() % 8;
         if(output) std::cout << "Guest " << current_guest << " has been chosen by the Minotaur." << std::endl;
         may_enter[current_guest] = true;
         guest_in = true;
-        cv[current_guest].notify_one();
-        std::unique_lock<std::mutex> lck(mtx);
-        while (guest_in) minotaur_cv.wait(lck);
+        cv[current_guest].notify_one(); // Notifying the guest of being chosen.
+        std::unique_lock<std::mutex> lck(mtx); // Locking the Minotaur until the guest in the labyrinth leaves.
+        while (guest_in) minotaur_cv.wait(lck); 
     }
     std::cout << "\nAll guests have experienced the maze." << std::endl;
+    // Waking up the threads one last time so that they may join.
     for (int i = 0; i < 8; i++) {
         may_enter[i] = true;
         cv[i].notify_one();
